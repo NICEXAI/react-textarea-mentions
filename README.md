@@ -1,27 +1,98 @@
-# React + TypeScript + Vite
+# Textarea Mentions
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Install
 
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-   parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-   },
+```
+npm i react-textarea-mentions
+or
+yarn add react-textarea-mentions
 ```
 
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+### Demo
+
+![demo]('./example/demo.gif')
+
+### Configurations
+
+#### Options
+
+| Name      | Type                  | Default      | Description                                                   |
+| --------- | --------------------- | ------------ | ------------------------------------------------------------- |
+| mentions  | TextareaMentionItem[] | []           | Mention list                                                  |
+| enable    | boolean               | true         | Enable or disable textarea mentions                           |
+| emptyText | string                | 'No results' | Empty text when no data                                       |
+| collision | boolean               | true         | Whether to detect collision when the mention list is too long |
+
+#### Events
+
+| Name     | Params                                                    | Description                          |
+| -------- | --------------------------------------------------------- | ------------------------------------ |
+| onSelect | `(item: TextareaMentionItem, caretPos: CaretPos) => void` | Triggered when select a mention item |
+
+### Usage
+
+```tsx
+import { TextareaMentions, autoCursorPos } from 'react-textarea-mentions'
+
+const textareaRef = useRef<HTMLTextAreaElement>(null)
+const mentions = [
+  {
+    title: 'Friends',
+    items: [
+      {
+        label: 'John',
+        value: 'John',
+      },
+      {
+        label: 'Jack',
+        value: 'Jack',
+      },
+      {
+        label: 'Tom',
+        value: 'Tom',
+      },
+    ],
+  },
+]
+
+return (
+  <div className={style.exampleRoot}>
+    <div className={style.box}>
+      <div className={style.title}>Textarea Mentions Example</div>
+      <div className={style.content}>
+        <TextareaMentions
+          mentions={mentions}
+          onSelect={(item, caretPos) => {
+            const originalContent = textareaRef.current?.value ?? ''
+            if (caretPos) {
+              const hasTriggerMarker = originalContent
+                .slice(caretPos.start, caretPos.end + 1)
+                .startsWith('/')
+              if (hasTriggerMarker) {
+                const leftContent = originalContent.slice(0, caretPos.start)
+                const rightContent = originalContent.slice(caretPos.end + 1)
+
+                const textareaNode = textareaRef.current
+                if (textareaNode) {
+                  textareaNode.value = leftContent + item.value + rightContent
+
+                  setTimeout(() => {
+                    autoCursorPos(textareaNode, leftContent.length + item.label.length, {
+                      scrollIntoView: true,
+                    })
+                  }, 30)
+                }
+              }
+            }
+          }}
+        >
+          <textarea ref={textareaRef} placeholder='Type / to mention'></textarea>
+        </TextareaMentions>
+      </div>
+    </div>
+  </div>
+)
+```
+
+### License
+Apache License 2.0

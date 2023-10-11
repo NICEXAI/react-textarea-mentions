@@ -1,8 +1,28 @@
 {
   "name": "react-textarea-mentions",
-  "private": true,
-  "version": "0.0.0",
+  "version": "0.0.2",
   "type": "module",
+  "author": {
+    "name": "NICEXAI",
+    "email": "nicezhuyunfei@gmail.com"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "./dist/index.js",
+  "typings": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "keywords": [
+    "react",
+    "textarea",
+    "mentions",
+    "suggestion"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -32,6 +52,11 @@
     "less": "^4.2.0",
     "rollup": "^4.0.2",
     "typescript": "^5.0.2",
-    "vite": "^4.4.5"
+    "vite": "^4.4.5",
+    "vite-plugin-dts": "^3.6.0",
+    "vite-plugin-style-inject": "^0.0.1"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org"
   }
 }

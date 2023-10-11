@@ -72,7 +72,7 @@ export const Mentions = forwardRef<MentionsRef, MentionsProps>(
       mentions: _mentions,
       query = '',
       emptyText = 'No results',
-      infinite = false,
+      infinite = true,
       styles,
       onChange,
       onSelect,
@@ -84,7 +84,7 @@ export const Mentions = forwardRef<MentionsRef, MentionsProps>(
     const [activeIndex, setActiveIndex] = useState(0)
     const rootRef = useRef<HTMLDivElement>(null)
     const scrollTimerRef = useRef<number>()
-    
+
     // prevent keyboard event and mouse event conflict
     const lockTimerRef = useRef<number>()
     const updateLockRef = useRef(false)

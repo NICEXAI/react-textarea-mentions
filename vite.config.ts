@@ -2,10 +2,10 @@ import react from '@vitejs/plugin-react'
 import { readFileSync } from 'fs'
 import path from 'path'
 import { defineConfig } from 'vite'
+import dts from 'vite-plugin-dts'
+import VitePluginStyleInject from 'vite-plugin-style-inject'
 
-const packageJson = JSON.parse(
-  readFileSync('./package.json', { encoding: 'utf-8' }),
-)
+const packageJson = JSON.parse(readFileSync('./package.json', { encoding: 'utf-8' }))
 const globals = {
   ...(packageJson?.dependencies || {}),
 }
@@ -16,16 +16,23 @@ function resolve(str: string) {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    dts({
+      include: 'packages/**/*.{ts,tsx}',
+      outDir: 'dist',
+    }),
+    VitePluginStyleInject(),
+  ],
   css: {
     modules: {
       localsConvention: 'camelCaseOnly',
     },
     preprocessorOptions: {
       less: {
-        math: "always",
+        math: 'always',
         relativeUrls: true,
-        javascriptEnabled: true
+        javascriptEnabled: true,
       },
     },
   },
@@ -33,9 +40,9 @@ export default defineConfig({
     outDir: 'dist',
     lib: {
       entry: resolve('packages/index.ts'),
-      name: 'react-textarea-mentions',
-      fileName: 'react-textarea-mentions',
-      formats: ['es', 'cjs'],
+      name: 'TextareaMentions',
+      fileName: 'index',
+      formats: ['es'],
     },
     rollupOptions: {
       external: ['react', 'react-dom', ...Object.keys(globals)],
@@ -43,5 +50,5 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-  }
+  },
 })

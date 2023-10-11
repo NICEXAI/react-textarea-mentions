@@ -1,0 +1,4 @@
+report/*
+coverage/*
+node_modules/*
+# jest/*
