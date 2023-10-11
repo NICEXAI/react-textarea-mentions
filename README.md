@@ -10,11 +10,11 @@ yarn add react-textarea-mentions
 
 ### Demo
 
-![demo]('./example/demo.gif')
+![demo]('https://github.com/NICEXAI/react-textarea-mentions/raw/main/example/demo.gif')
 
-### Configurations
+### Parameter Description
 
-#### Options
+##### Options
 
 | Name      | Type                  | Default      | Description                                                   |
 | --------- | --------------------- | ------------ | ------------------------------------------------------------- |
@@ -23,11 +23,12 @@ yarn add react-textarea-mentions
 | emptyText | string                | 'No results' | Empty text when no data                                       |
 | collision | boolean               | true         | Whether to detect collision when the mention list is too long |
 
-#### Events
+##### Events
 
 | Name     | Params                                                    | Description                          |
 | -------- | --------------------------------------------------------- | ------------------------------------ |
 | onSelect | `(item: TextareaMentionItem, caretPos: CaretPos) => void` | Triggered when select a mention item |
+
 
 ### Usage
 
