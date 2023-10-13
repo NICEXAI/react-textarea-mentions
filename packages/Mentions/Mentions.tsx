@@ -20,6 +20,7 @@ export interface MentionsRef {
   prev: () => void
   next: () => void
   select: () => void
+  reset: () => void
   getElement: () => HTMLDivElement | null
 }
 
@@ -29,32 +30,13 @@ export interface MentionsProps {
     left: number
   }
   mentions: TextareaMention[]
-  query?: string
+  keyword?: string
   emptyText?: string
-  infinite?: boolean
   styles?: CSSProperties
-  onChange?: (items: TextareaMentionItem[]) => void
+  scrollOptions?: {
+    infinite: boolean
+  }
   onSelect?: (item: TextareaMentionItem) => void
-}
-
-const searchMentions = (q: string, data: TextareaMention[]) => {
-  const newMentions: TextareaMention[] = []
-  if (q === '') {
-    return [...data]
-  }
-  for (let i = 0; i < data.length; i++) {
-    const mention = data[i]
-    if (mention.filter === false) {
-      continue
-    }
-    const items = mention.items.filter((item) => {
-      return item.label.toLowerCase().includes(q.toLowerCase())
-    })
-    if (items.length) {
-      newMentions.push({ title: mention.title, items })
-    }
-  }
-  return newMentions
 }
 
 const getItemsFromMentions = (data: TextareaMention[]) => {
@@ -69,18 +51,17 @@ export const Mentions = forwardRef<MentionsRef, MentionsProps>(
   (
     {
       position,
-      mentions: _mentions,
-      query = '',
+      mentions,
+      keyword = '',
       emptyText = 'No results',
-      infinite = true,
       styles,
-      onChange,
+      scrollOptions = {
+        infinite: false,
+      },
       onSelect,
     },
     ref
   ) => {
-    const [mentions, setMentions] = useState<TextareaMention[]>([])
-    const [visible, setVisible] = useState(false)
     const [activeIndex, setActiveIndex] = useState(0)
     const rootRef = useRef<HTMLDivElement>(null)
     const scrollTimerRef = useRef<number>()
@@ -102,18 +83,14 @@ export const Mentions = forwardRef<MentionsRef, MentionsProps>(
             const boxHeight = rootRef.current?.offsetHeight ?? 0
             const boxTop = rootRef.current?.scrollTop ?? 0
             const { offsetTop: nodeTop, offsetHeight: nodeHight } = node
-            const behavior =
-              targetIndex === 0 || targetIndex === nodes.length - 1 ? 'auto' : 'smooth'
 
             if (nodeHight + nodeTop > boxHeight + boxTop) {
               rootRef.current?.scrollTo({
-                top: nodeHight + nodeTop - boxHeight + deviation,
-                behavior,
+                top: targetIndex === 0 ? 0 : nodeHight + nodeTop - boxHeight + deviation,
               })
             } else if (nodeTop < boxTop) {
               rootRef.current?.scrollTo({
-                top: nodeTop - deviation,
-                behavior,
+                top: targetIndex === 0 ? 0 : nodeTop - deviation,
               })
             }
 
@@ -134,7 +111,7 @@ export const Mentions = forwardRef<MentionsRef, MentionsProps>(
       return {
         prev: () => {
           const total = getItemsFromMentions(mentions).length
-          if (!infinite && activeIndex <= 0) {
+          if (!scrollOptions.infinite && activeIndex <= 0) {
             return
           }
           const nIndex = activeIndex <= 0 ? total - 1 : activeIndex - 1
@@ -144,7 +121,7 @@ export const Mentions = forwardRef<MentionsRef, MentionsProps>(
         },
         next: async () => {
           const total = getItemsFromMentions(mentions).length
-          if (!infinite && activeIndex >= total - 1) {
+          if (!scrollOptions.infinite && activeIndex >= total - 1) {
             return
           }
           const nIndex = activeIndex >= total - 1 ? 0 : activeIndex + 1
@@ -158,6 +135,12 @@ export const Mentions = forwardRef<MentionsRef, MentionsProps>(
             onSelect?.(items[activeIndex])
           }
         },
+        reset: () => {
+          setActiveIndex(0)
+          if (rootRef.current) {
+            rootRef.current.scrollTop = 0
+          }
+        },
         getElement: () => {
           return rootRef.current
         },
@@ -165,19 +148,8 @@ export const Mentions = forwardRef<MentionsRef, MentionsProps>(
     })
 
     useEffect(() => {
-      const newMentions = searchMentions(query, _mentions)
-      setMentions(newMentions)
       setActiveIndex(0)
-      if (!visible && newMentions.length) {
-        setVisible(true)
-      }
-      onChange?.(getItemsFromMentions(newMentions))
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [_mentions, query])
-
-    if (!visible) {
-      return null
-    }
+    }, [mentions])
 
     let currentIndex = -1
 
@@ -221,7 +193,7 @@ export const Mentions = forwardRef<MentionsRef, MentionsProps>(
                         <Highlight
                           textToHighlight={item.label}
                           highlightClassName={style.highlight}
-                          searchWords={[query]}
+                          searchWords={[keyword]}
                         />
                       </div>
                     )

@@ -10,11 +10,13 @@ import {
 import getCaretCoordinates from 'textarea-caret'
 import { Mentions, MentionsRef, TextareaMention, TextareaMentionItem } from './Mentions'
 import style from './TextareaMentions.module.less'
+import { searchMentions } from './utils'
 
 interface TextareaMentionsState {
   query: string
   leftIndex: number
   caretPosition: number
+  suggestions: TextareaMention[]
   suggestionVisible: boolean
   suggestionsPosition: {
     top: number
@@ -27,6 +29,7 @@ const DEFAULT_TEXTAREA_MENTIONS_STATE: TextareaMentionsState = {
   query: '',
   leftIndex: -1,
   caretPosition: -1,
+  suggestions: [],
   suggestionVisible: false,
   suggestionsPosition: {
     top: 0,
@@ -50,13 +53,16 @@ export interface TextareaMentionsProps {
 }
 
 export function TextareaMentions(props: TextareaMentionsProps) {
-  const { children, enable = true, collision, onSelect } = props
+  const { children, mentions, enable = true, collision, onSelect } = props
   const [mentionsState, setMentionsState] = useState(DEFAULT_TEXTAREA_MENTIONS_STATE)
-  const mentionItems = useRef<TextareaMentionItem[]>([])
   const mentionsRef = useRef<MentionsRef>(null)
   const caretPosRef = useRef<TextareaMentionsCaretPosition>()
 
   useEffect(() => {
+    if (!mentionsState.suggestionVisible) {
+      mentionsRef.current?.reset()
+    }
+
     const closeMentionsHandler = () => {
       if (mentionsState.suggestionVisible) {
         setMentionsState(DEFAULT_TEXTAREA_MENTIONS_STATE)
@@ -94,7 +100,7 @@ export function TextareaMentions(props: TextareaMentionsProps) {
             case 'Enter':
               if (mentionsState.suggestionVisible) {
                 e.preventDefault()
-                if (mentionItems.current.length) {
+                if (mentionsState.suggestions.length) {
                   mentionsRef.current?.select()
                 }
                 return
@@ -154,28 +160,32 @@ export function TextareaMentions(props: TextareaMentionsProps) {
               }
             }
 
-            const newMentionsState = {
-              query,
-              leftIndex,
-              caretPosition,
-              suggestionVisible,
-              suggestionsPosition,
-              counter: 0,
+            const suggestions = query === '' ? mentions : searchMentions(query, mentions)
+            if (suggestions.length) {
+              const newMentionsState = {
+                query,
+                leftIndex,
+                caretPosition,
+                suggestions,
+                suggestionVisible,
+                suggestionsPosition,
+                counter: 0,
+              }
+              setMentionsState(newMentionsState)
             }
-            setMentionsState(newMentionsState)
             return
           }
 
           // update mentions
           if (mentionsState.suggestionVisible && suggestionVisible) {
+            const suggestions = searchMentions(query, mentions)
+            const counter = suggestions.length === 0 ? mentionsState.counter + 1 : 0
             setMentionsState({
               ...mentionsState,
               query,
-              suggestionVisible: mentionsState.counter < 2,
-              counter:
-                mentionsState.query.length < query.length && mentionItems.current.length === 0
-                  ? mentionsState.counter + 1
-                  : 0,
+              suggestions,
+              counter,
+              suggestionVisible: counter < 2,
             })
           }
 
@@ -192,14 +202,11 @@ export function TextareaMentions(props: TextareaMentionsProps) {
 
       {/* mentions */}
       <Mentions
-        {...props}
         ref={mentionsRef}
         styles={{ visibility: mentionsState.suggestionVisible ? 'visible' : 'hidden' }}
         position={mentionsState.suggestionsPosition}
-        query={mentionsState.query}
-        onChange={(items) => {
-          mentionItems.current = items
-        }}
+        keyword={mentionsState.query}
+        mentions={mentionsState.suggestions}
         onSelect={(item) => {
           onSelect?.(item, caretPosRef.current)
           setMentionsState(DEFAULT_TEXTAREA_MENTIONS_STATE)
